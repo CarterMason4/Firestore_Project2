@@ -6,7 +6,14 @@
     <string name="save">Save</string>
     <string name="load">Load</string>
 
+    <string name="result">Title : %1$s \n description : %2$s</string>
+
     <string name="success_saving_note">Note successfully saved</string>
+    <string name="success_update_note">Successfully updated note</string>
+    <string name="success_deletion_note">Successfully deleted note</string>
+    <string name="success_delete_title">Successfully deleted title</string>
+
     <string name="error_saving_note">Something went wrong</string>
+    <string name="error_loading_note">Something went wrong while retrieving the datas.</string>
 
 </resources>
