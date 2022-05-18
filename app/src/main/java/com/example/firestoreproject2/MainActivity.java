@@ -3,6 +3,8 @@ package com.example.firestoreproject2;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.widget.Button;
@@ -98,14 +100,12 @@ public class MainActivity extends AppCompatActivity {
                     collectionReference.add(note)
                             .addOnSuccessListener(unused -> {
                                 displayToast(getResources().getString(R.string.success_saving_note));
-                                Log.e(TAG, "Note successfully added");
+                                Log.e(TAG, getResources().getString(R.string.success_saving_note));
                             })
                             .addOnFailureListener(error -> Log.e(TAG, error.toString()));
                 }
             });
     }
-
-
 
     private void getAllNotes() {
         loadData.setOnClickListener(view -> {
@@ -123,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
                     .addOnFailureListener(error -> Log.e(TAG, error.toString()));
         });
     }
+
 
     // TODO not actually the button that's going to be used
     // TODO Do not forget to rewire the correct button to this method.
@@ -217,8 +218,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void displayToast(String message) {
-        Toast toast = Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG);
+        Toast toast = Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.CENTER, 0, 0);
         toast.show();
     }
+
 }

@@ -32,7 +32,6 @@ public class Note {
         }
     }
 
-
     public void setDescription(String description) {
         if(description == null || description.isEmpty()) {
             this.description = "";
