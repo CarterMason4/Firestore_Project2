@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Firestore Project2</string>
+
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="save">Save</string>
+    <string name="load">Load</string>
+
+    <string name="success_saving_note">Note successfully saved</string>
+    <string name="error_saving_note">Something went wrong</string>
+
+</resources>
