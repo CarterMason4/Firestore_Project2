@@ -12,8 +12,13 @@
     <string name="success_update_note">Successfully updated note</string>
     <string name="success_deletion_note">Successfully deleted note</string>
     <string name="success_delete_title">Successfully deleted title</string>
+    <string name="success_delete_description">Successfully deleted description</string>
 
-    <string name="error_saving_note">Something went wrong</string>
+    <string name="error_saving_note">Something went wrong while saving the note</string>
     <string name="error_loading_note">Something went wrong while retrieving the datas.</string>
+    <string name="error_loading_notes">Something went wring while loading the notes.</string>
+
+    <string name="received_update">Update detected !</string>
+    <string name="notification_channel_id" translatable="false">update_notification_channel</string>
 
 </resources>

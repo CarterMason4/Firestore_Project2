@@ -1,10 +1,13 @@
 package com.example.firestoreproject2;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.widget.Button;
@@ -12,16 +15,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.firestore.SetOptions;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private final CollectionReference collectionReference = db.collection("Notebook");
     private static final String KEY_DESCRIPTION = "description";
     private static final String KEY_TITLE = "title";
+    private static final int NOTIFICATION_ID = 20;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,23 +55,36 @@ public class MainActivity extends AppCompatActivity {
         resetEditTexts();
     }
 
-    // TODO Ajouter un Snapshot listener à collectionReference
-/*    @Override
-    protected void onStart() {
-        super.onStart();
-        collectionReference.addSnapshotListener(this, (value, error) -> {
-            if(error != null) {
-                displayToast(getResources().getString(R.string.error_loading_note));
-                Log.e(TAG, error.toString());
-            }
+    // TODO I think the notification goes here.
 
-            assert value != null : getResources().getString(R.string.error_loading_note);
+   @Override
+   protected void onStart() {
+       super.onStart();
+       collectionReference.addSnapshotListener(this, (value, error) -> {
+           if(error != null) {
+               Log.e(TAG, getResources().getString(R.string.error_loading_notes));
+               return;
+           }
 
-            if(value.exists()) {
+           assert value != null : getResources().getString(R.string.error_loading_notes);
 
-            }
-        });
-    }*/
+           StringBuilder builder = new StringBuilder();
+
+           for(QueryDocumentSnapshot snapshot : value) {
+               Note note = snapshot.toObject(Note.class);
+               builder.append("Titre : ")
+                       .append(note.getTitle())
+                       .append('\n')
+                       .append("Description : ")
+                       .append(note.getDescription())
+                       .append("\n\n");
+           }
+
+           textViewData.setText(builder.toString());
+           displayToast(getResources().getString(R.string.success_update_note));
+           showUpdateNotification();
+       });
+   }
 
     private void initiateViews() {
         editTextTitle = findViewById(R.id.editTextTitle);
@@ -85,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
         addDatas();
         getAllNotes();
     }
-
 
     // Going to create an other method, called "Add data"
     // It's a bit different because it uses a CollectionReference instead of a DocumentReference
@@ -104,18 +116,21 @@ public class MainActivity extends AppCompatActivity {
                             })
                             .addOnFailureListener(error -> Log.e(TAG, error.toString()));
                 }
+                resetEditTexts();
             });
     }
 
     private void getAllNotes() {
         loadData.setOnClickListener(view -> {
             StringBuilder text = new StringBuilder();
-
             collectionReference.get()
                     .addOnSuccessListener(queryDocumentSnapshots -> {
                         for(QueryDocumentSnapshot snapshot : queryDocumentSnapshots) {
                             Note note = snapshot.toObject(Note.class);
-                            text.append(note.getTitle()).append("\n").append(note.getDescription()).append("\n\n");
+                            text.append(note.getTitle())
+                                    .append("\n")
+                                    .append(note.getDescription())
+                                    .append("\n\n");
                         }
                         textViewData.setText(text.toString());
                         Log.e(TAG, "Succcessfully retrieved all notes");
@@ -123,8 +138,6 @@ public class MainActivity extends AppCompatActivity {
                     .addOnFailureListener(error -> Log.e(TAG, error.toString()));
         });
     }
-
-
     // TODO not actually the button that's going to be used
     // TODO Do not forget to rewire the correct button to this method.
     // TODO Otherwise the app is gonna crash.
@@ -148,7 +161,8 @@ public class MainActivity extends AppCompatActivity {
     // TODO Otherwise the app is gonna crash.
 
     private void deleteNote() {
-        saveData.setOnClickListener(view -> docRef.delete()
+        saveData.setOnClickListener(view ->
+                docRef.delete()
                 .addOnSuccessListener(unused -> {
                     displayToast(getResources().getString(R.string.success_deletion_note));
                     Log.e(TAG, getResources().getString(R.string.success_deletion_note));
@@ -167,6 +181,15 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, getResources().getString(R.string.success_delete_title));
                 })
                 .addOnFailureListener(error -> Log.e(TAG, error.toString())));
+    }
+
+    private void deleteDescription() {
+        saveData.setOnClickListener(view ->
+                docRef.update(KEY_DESCRIPTION, FieldValue.delete())
+                .addOnSuccessListener(unused -> {
+                    displayToast(getResources().getString(R.string.success_delete_description));
+                    Log.e(TAG, getResources().getString(R.string.success_delete_description));
+                }).addOnFailureListener(error -> Log.e(TAG, error.toString())));
     }
 
 
@@ -193,7 +216,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     // TODO Delete when necessary
-
     private void loadDatas() {
         loadData.setOnClickListener(view ->
                     docRef.get()
@@ -212,6 +234,39 @@ public class MainActivity extends AppCompatActivity {
                             }).addOnFailureListener(error -> Log.e(TAG, error.toString())));
     }
 
+    private void showUpdateNotification() {
+        String channelId = getResources().getString(R.string.notification_channel_id);
+
+        // Build the notification
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
+                .setTicker(getResources().getString(R.string.app_name))
+                .setContentTitle(getResources().getString(R.string.received_update))
+                .setWhen(System.currentTimeMillis())
+                .setOngoing(false)
+                .setOnlyAlertOnce(true)
+                .setSmallIcon(R.drawable.ic_launcher_background)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+        // Create the manager that is gonna handle the notification.
+        final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // Android O requires a notification channel
+        // in order to link Android to the app
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.notification_channel_id);
+            String description = "description";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(
+                    getResources().getString(R.string.notification_channel_id),
+                    name,
+                    importance);
+
+            NotificationManager newNotificationManager = getSystemService(NotificationManager.class);
+            newNotificationManager.createNotificationChannel(channel);
+        }
+        notificationManager.notify(NOTIFICATION_ID, builder.build());
+    }
+
     private void resetEditTexts() {
         editTextTitle.setText("");
         editTextDescription.setText("");
@@ -222,5 +277,4 @@ public class MainActivity extends AppCompatActivity {
         toast.setGravity(Gravity.CENTER, 0, 0);
         toast.show();
     }
-
 }
