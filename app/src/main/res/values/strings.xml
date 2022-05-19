@@ -5,7 +5,7 @@
     <string name="description">Description</string>
     <string name="save">Save</string>
     <string name="load">Load</string>
-
+    <string name="priority">Priority</string>
     <string name="result">Title : %1$s \n description : %2$s</string>
 
     <string name="success_saving_note">Note successfully saved</string>
@@ -20,5 +20,7 @@
 
     <string name="received_update">Update detected !</string>
     <string name="notification_channel_id" translatable="false">update_notification_channel</string>
+
+    <string name="fill_all_fields">Please fill in all fields</string>
 
 </resources>

@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     // VIEWS
     private EditText editTextTitle;
     private EditText editTextDescription;
+    private EditText editTextPriority;
     private TextView textViewData;
     private Button saveData;
     private Button loadData;
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_DESCRIPTION = "description";
     private static final String KEY_TITLE = "title";
     private static final int NOTIFICATION_ID = 20;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,14 +74,16 @@ public class MainActivity extends AppCompatActivity {
 
            for(QueryDocumentSnapshot snapshot : value) {
                Note note = snapshot.toObject(Note.class);
-               builder.append("Titre : ")
+               note.setDocumentId(snapshot.getId());
+               builder.append(note.getDocumentId())
+                       .append('\n')
                        .append(note.getTitle())
                        .append('\n')
-                       .append("Description : ")
                        .append(note.getDescription())
+                       .append('\n')
+                       .append(note.getPriority())
                        .append("\n\n");
            }
-
            textViewData.setText(builder.toString());
            displayToast(getResources().getString(R.string.success_update_note));
            showUpdateNotification();
@@ -89,14 +93,35 @@ public class MainActivity extends AppCompatActivity {
     private void initiateViews() {
         editTextTitle = findViewById(R.id.editTextTitle);
         editTextDescription = findViewById(R.id.editTextDescription);
+        editTextPriority = findViewById(R.id.editTextPriority);
         textViewData = findViewById(R.id.textViewData);
         saveData = findViewById(R.id.saveButton);
         loadData = findViewById(R.id.loadButton);
 
         // saveDatas();
         // loadDatas();
-        addDatas();
+        addNotesWithPriority();
         getAllNotes();
+    }
+
+    private void addNotesWithPriority() {
+        saveData.setOnClickListener(view -> {
+            String title = editTextTitle.getText().toString();
+            String description = editTextDescription.getText().toString();
+            String priority = editTextPriority.getText().toString();
+
+            if(!title.isEmpty() && !description.isEmpty() && !priority.isEmpty()) {
+                Note note = new Note(title, description, Integer.parseInt(priority));
+
+                collectionReference.add(note)
+                        .addOnSuccessListener(unused -> {
+                            String message = getResources().getString(R.string.success_saving_note);
+                            Log.e(TAG, message);
+                            displayToast(message);
+                        }).addOnFailureListener(error -> Log.e(TAG, error.toString()));
+                resetEditTexts();
+            }
+        });
     }
 
     // Going to create an other method, called "Add data"
@@ -127,15 +152,19 @@ public class MainActivity extends AppCompatActivity {
                     .addOnSuccessListener(queryDocumentSnapshots -> {
                         for(QueryDocumentSnapshot snapshot : queryDocumentSnapshots) {
                             Note note = snapshot.toObject(Note.class);
-                            text.append(note.getTitle())
-                                    .append("\n")
+                            note.setDocumentId(snapshot.getId());
+                            text.append(note.getDocumentId())
+                                    .append('\n')
+                                    .append(note.getTitle())
+                                    .append('\n')
                                     .append(note.getDescription())
+                                    .append('\n')
+                                    .append(note.getPriority())
                                     .append("\n\n");
                         }
                         textViewData.setText(text.toString());
                         Log.e(TAG, "Succcessfully retrieved all notes");
-                    })
-                    .addOnFailureListener(error -> Log.e(TAG, error.toString()));
+                    }).addOnFailureListener(error -> Log.e(TAG, error.toString()));
         });
     }
     // TODO not actually the button that's going to be used
@@ -270,6 +299,7 @@ public class MainActivity extends AppCompatActivity {
     private void resetEditTexts() {
         editTextTitle.setText("");
         editTextDescription.setText("");
+        editTextPriority.setText("");
     }
 
     private void displayToast(String message) {
